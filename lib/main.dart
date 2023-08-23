@@ -1,7 +1,7 @@
 import 'package:chatresume/chat.dart';
+import 'package:chatresume/screens/auth.dart';
 import 'package:chatresume/screens/build.dart';
 import 'package:chatresume/screens/login.dart';
-import 'package:chatresume/screens/result.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fluro/fluro.dart';
@@ -32,11 +32,11 @@ class MyApp extends StatelessWidget {
       ),
       //home: const Chat(),
       initialRoute: '/',
-      routes: {
-        "/": (context) => const Chat(),
-        "/login": (context) => const LoginScreen(),
-        "/build": (context) => const BuildScreen()
-      },
+      // routes: {
+      //   "/": (context) => const Chat(),
+      //   "/login": (context) => const LoginScreen(),
+      //   "/build": (context) => const BuildScreen()
+      // },
     );
   }
 }
@@ -54,11 +54,10 @@ class MyFluroRouter {
   static final Handler _BuildPageHandler = Handler(
       handlerFunc: (BuildContext? context, Map<String, dynamic> params) =>
           const BuildScreen());
-  static final Handler _ManageHandler = Handler(
+
+  static final Handler _AuthHandler = Handler(
       handlerFunc: (BuildContext? context, Map<String, dynamic> params) =>
-          const ResultScreen(
-            chatbot_name: "my chatbot",
-          ));
+          const AuthScreen());
 
   static void setupRouter() {
     router.define("/",
@@ -67,7 +66,7 @@ class MyFluroRouter {
         handler: _LoginPageHandler, transitionType: TransitionType.fadeIn);
     router.define("/build",
         handler: _BuildPageHandler, transitionType: TransitionType.fadeIn);
-    router.define("/manage",
-        handler: _ManageHandler, transitionType: TransitionType.fadeIn);
+    router.define("/callback",
+        handler: _AuthHandler, transitionType: TransitionType.fadeIn);
   }
 }

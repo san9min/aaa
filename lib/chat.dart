@@ -1,5 +1,5 @@
 import 'package:chatresume/api/api_service.dart';
-import 'package:chatresume/main.dart';
+import 'package:chatresume/api/login.dart';
 import 'package:chatresume/model/user.dart';
 import 'package:chatresume/model/user_candidates.dart';
 import 'package:chatresume/product_card.dart';
@@ -7,6 +7,8 @@ import 'package:chatresume/screens/result.dart';
 import 'package:chatresume/widget/conversation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:cookie_wrapper/cookie.dart';
+import 'package:chatresume/main.dart';
 
 class Chat extends StatefulWidget {
   const Chat(
@@ -24,9 +26,13 @@ class Chat extends StatefulWidget {
 class _ChatState extends State<Chat> {
   bool _loading = false;
   Timer? blinkingTimer;
-  bool isExpansion = true;
+  bool isExpansion = false;
   final textcontroller = TextEditingController();
+
   bool login = false;
+
+  String? userName;
+  String? userImg;
 
   List<ChatMessage> messages = [];
   List<Candidate> candidateList = [];
@@ -39,7 +45,7 @@ class _ChatState extends State<Chat> {
   @override
   void initState() {
     super.initState();
-    helpLogin();
+    checkLogin();
     candidateList = [
       Candidate(text: "사용 방법에 대해 알려주세요!"),
       Candidate(text: "audrey.AI는 무엇을 하나요?"),
@@ -47,8 +53,23 @@ class _ChatState extends State<Chat> {
     ];
   }
 
-  void helpLogin() async {
-    //login = await LoginAPI.checkLogin();
+  void checkLogin() async {
+    var cookie = Cookie.create();
+
+    var accessToken = cookie.get('access_token');
+    var refreshToken = cookie.get('refresh_token');
+
+    if (accessToken != null && refreshToken != null) {
+      final userNameImg = await UserInfo.getUserInfo(accessToken, refreshToken);
+      if (userNameImg.isEmpty) {
+        MyFluroRouter.router.navigateTo(context, "/login");
+      }
+      setState(() {
+        userName = userNameImg['name'];
+        userImg = userNameImg['user_image'];
+        login = true;
+      });
+    } else {}
   }
 
   @override
@@ -99,10 +120,10 @@ class _ChatState extends State<Chat> {
         messages.last.messageContent = "";
         isFirstData = false;
       }
-      //TODO: Product Card
+
       if (message.contains("@@@")) {
         cleanedResponse = message.replaceAll("@@@", "");
-        print(cleanedResponse);
+
         messages.add(ChatMessage(
           messageContent: "",
           messageType: "model",
@@ -558,7 +579,7 @@ class _ChatState extends State<Chat> {
           ),
         ),
         const SizedBox(height: 12),
-        login ? UserInfoList("SangminLee") : LoginButton(),
+        login ? UserInfoList(userName!, userImg!) : LoginButton(),
         Flexible(child: Container()),
         // InkWell(
         //   onTap: () {
@@ -717,72 +738,123 @@ class _ChatState extends State<Chat> {
     );
   }
 
-  ExpansionTile UserInfoList(String title) {
-    return ExpansionTile(
-      title: Text(
-        title,
-        style: TextStyle(
-            color: isExpansion ? Colors.lightBlueAccent : Colors.grey),
-      ),
-      initiallyExpanded: true,
-      onExpansionChanged: (exapnsion) {
-        setState(() {
-          isExpansion = exapnsion;
-        });
-      },
-      leading: Container(
-        height: 64,
-        width: 64,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(64.0),
+  Widget UserInfoList(String name, String userImage) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        title: Text(
+          name,
+          style: const TextStyle(color: Colors.white),
         ),
-        child: ClipOval(
-          child: Image.network(
-            "https://media.licdn.com/dms/image/D5603AQFaUPHhGa2rLg/profile-displayphoto-shrink_400_400/0/1688652268000?e=1696464000&v=beta&t=KK9o03vHhPmacdslKOa0PCPUinlqzYMhEu_WVwGs-MM",
-            fit: BoxFit.cover,
-            width: 64,
-            height: 64,
+        iconColor: Colors.white70,
+        initiallyExpanded: false,
+        trailing: const Icon(Icons.expand_more_rounded),
+        onExpansionChanged: (exapnsion) {
+          setState(() {
+            isExpansion = exapnsion;
+          });
+        },
+        leading: Container(
+          height: 64,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle, // BoxShape를 원으로 설정
+            // 추가적인 스타일링을 원하는 경우 여기에 추가 가능
+          ),
+          child: ClipOval(
+            child: Image.network(
+              userImage,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: const Color.fromARGB(255, 46, 50, 52)),
+                child: Column(
+                  children: [
+                    MyChatbot("Wine"),
+                    // MyChatbot("Winininiinin"),
+                    LogOutBttn()
+                  ],
+                )),
+          ),
+        ],
       ),
-      children: [MyChatbot("Wine"), MyChatbot("Winininiinin")],
     );
   }
 
   Widget MyChatbot(String name) {
-    return SizedBox(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: InkWell(
-          onTap: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      const ResultScreen(chatbot_name: "Wine")),
-              (route) => false,
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 8.0),
-            child: Row(
-              children: [
-                const Image(
-                  image: AssetImage('assets/icons/wine.png'),
-                  fit: BoxFit.contain,
-                  width: 32,
-                  height: 32,
+    return Container(
+      child: InkWell(
+        onTap: () {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const ResultScreen(chatbot_name: "Wine")),
+            (route) => false,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 8.0),
+          child: Row(
+            children: [
+              const Image(
+                image: AssetImage('assets/icons/wine.png'),
+                fit: BoxFit.contain,
+                width: 32,
+                height: 32,
+              ),
+              const SizedBox(width: 8), // 이미지와 텍스트 사이 간격
+              Flexible(
+                child: Text(
+                  name,
+                  style: const TextStyle(color: Colors.grey),
+                  overflow: TextOverflow.ellipsis, // 텍스트가 길면 자동으로 줄바꿈
                 ),
-                const SizedBox(width: 8), // 이미지와 텍스트 사이 간격
-                Flexible(
-                  child: Text(
-                    name,
-                    style: const TextStyle(color: Colors.grey),
-                    overflow: TextOverflow.ellipsis, // 텍스트가 길면 자동으로 줄바꿈
-                  ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget LogOutBttn() {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(width: 1.0, color: Colors.white10), // 위쪽에 테두리 추가
+          // 나머지 방향에는 테두리가 없음
+        ),
+      ),
+      child: InkWell(
+        onTap: () async {
+          var cookie = Cookie.create();
+          cookie.remove('access_token');
+          cookie.remove('refresh_token');
+          setState(() {
+            login = false;
+            _handleNewChatPressed();
+          });
+        },
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 36, vertical: 8.0),
+          child: Row(
+            children: [
+              Icon(Icons.logout, size: 28, color: Colors.white),
+              SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  "Log out",
+                  style: TextStyle(color: Colors.white),
+                  overflow: TextOverflow.ellipsis, // 텍스트가 길면 자동으로 줄바꿈
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

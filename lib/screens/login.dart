@@ -1,6 +1,7 @@
 import 'package:chatresume/main.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+//import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +11,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  String accessCode = '';
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,37 +68,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? MediaQuery.of(context).size.width * 0.5
                     : MediaQuery.of(context).size.width * 0.6,
             child: ElevatedButton.icon(
-              onPressed: () async {
+              onPressed: () {
                 Uri uri = Uri.parse(
-                    "https://chat-profile.audrey.kr/api/user/google/login/");
+                  "https://chat-profile.audrey.kr/api/user/google/login/",
+                );
 
-                try {
-                  final response = await http.post(uri);
-                  print(response);
-                  if (response.statusCode == 302) {
-                    // 302 응답의 경우 새로운 위치로 리디렉션
-                    String newLocation = response.headers["location"]!;
-                    if (newLocation != null) {
-                      Uri newUri = Uri.parse(newLocation);
-                      final newResponse =
-                          await http.get(newUri); // 또는 POST 요청 등을 사용
-                      print(newResponse);
-                      // 새로운 응답에 대한 처리
-                    } else {
-                      print(
-                          "No 'Location' header in the redirection response.");
-                    }
-                  } else {
-                    // 302 이외의 응답에 대한 처리
-                    print(response);
-                  }
-                } catch (e) {
-                  print(e);
-                  print("Error: $e");
-                }
-                // launchUrl(
-                //   uri,
-                // ); // URL을 기본 브라우저로 열기
+                launchUrl(uri,
+                    mode: LaunchMode.inAppWebView,
+                    webViewConfiguration: const WebViewConfiguration(),
+                    webOnlyWindowName: "_self");
               },
               icon: const Row(
                 children: [

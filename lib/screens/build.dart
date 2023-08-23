@@ -1,4 +1,5 @@
 import 'package:chatresume/main.dart';
+import 'package:chatresume/screens/result.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -27,6 +28,8 @@ class _BuildScreenState extends State<BuildScreen>
   double percent = 0.0; // 초기값 설정
   late AnimationController _controller;
   List<QnaContainer> qnaContainers = [];
+  List<Map<String, TextEditingController>> qnaTextController = [];
+
   @override
   void initState() {
     super.initState();
@@ -184,14 +187,13 @@ class _BuildScreenState extends State<BuildScreen>
           Center(
             child: InkWell(
               onTap: () {
-                MyFluroRouter.router.navigateTo(context, "/manage");
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //       builder: (context) => const ResultScreen(
-                //             chatbot_name: "My Chatbot",
-                //           )),
-                //);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ResultScreen(
+                            chatbot_name: "My Chatbot",
+                          )),
+                );
               },
               child: Container(
                 padding: EdgeInsets.symmetric(
@@ -732,7 +734,7 @@ class _BuildScreenState extends State<BuildScreen>
                       ),
                       onTap: () {
                         setState(() {
-                          qnaContainers.add(QnaContainer(
+                          QnaContainer newContainer = QnaContainer(
                             id: qnaContainers.length, // Assign a unique ID
                             onDelete: (id) {
                               setState(() {
@@ -740,7 +742,13 @@ class _BuildScreenState extends State<BuildScreen>
                                     (container) => container.id == id);
                               });
                             },
-                          ));
+                          );
+
+                          qnaContainers.add(newContainer);
+                          // qnaTextController.add({
+                          //   'question': newContainer.qController,
+                          //   'answer': newContainer.answerController,
+                          // });
                         });
                       })),
             ]),
@@ -763,12 +771,37 @@ class _BuildScreenState extends State<BuildScreen>
   }
 }
 
-class QnaContainer extends StatelessWidget {
+class QnaContainer extends StatefulWidget {
   final int id;
   final Function(int) onDelete;
 
   const QnaContainer({required this.id, required this.onDelete, Key? key})
       : super(key: key);
+
+  @override
+  State<QnaContainer> createState() => _QnaContainerState();
+}
+
+class _QnaContainerState extends State<QnaContainer> {
+  late TextEditingController _questionController; // Question 텍스트 컨트롤러
+  late TextEditingController _answerController; // Answer 텍스트 컨트롤러
+  @override
+  void initState() {
+    super.initState();
+    _questionController = TextEditingController(); // 컨트롤러 초기화
+    _answerController = TextEditingController(); // 컨트롤러 초기화
+  }
+
+  @override
+  void dispose() {
+    _questionController.dispose(); // 컨트롤러 해제
+    _answerController.dispose(); // 컨트롤러 해제
+    super.dispose();
+  }
+
+  // Getter 메서드 추가
+  TextEditingController get qController => _questionController;
+  TextEditingController get answerController => _answerController;
 
   @override
   Widget build(BuildContext context) {
@@ -807,6 +840,7 @@ class QnaContainer extends StatelessWidget {
                   height: 12,
                 ),
                 TextField(
+                  controller: _questionController,
                   cursorColor: Colors.grey.shade900,
                   decoration: const InputDecoration(
                     fillColor: Colors.white,
@@ -848,7 +882,7 @@ class QnaContainer extends StatelessWidget {
                   child: TextField(
                     maxLines: null,
                     expands: true,
-
+                    controller: _answerController,
                     cursorColor: Colors.grey.shade900,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
@@ -907,7 +941,8 @@ class QnaContainer extends StatelessWidget {
                 right: 0,
                 child: InkWell(
                   onTap: () {
-                    onDelete(id); // Call the onDelete callback with the ID
+                    widget.onDelete(
+                        widget.id); // Call the onDelete callback with the ID
                   },
                   child: const Icon(Icons.cancel, color: Colors.white),
                 ))

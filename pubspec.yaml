@@ -51,6 +51,9 @@ dev_dependencies:
   drag_and_drop_lists: ^0.3.3
   fluro: ^2.0.5
   url_strategy: ^0.2.0
+  flutter_secure_storage: ^8.0.0
+  cookie_wrapper: ^0.1.2
+  flutter_markdown: ^0.6.17+1
 
   flutter_test:
     sdk: flutter

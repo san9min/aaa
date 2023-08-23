@@ -496,7 +496,7 @@ defer>
   Widget pageButton(String title, int page, IconData iconData) {
     final fontColor = pageIndex == page ? Colors.cyan : Colors.grey.shade700;
     final lineColor = pageIndex == page ? Colors.teal : Colors.transparent;
-    final fontSize = MediaQuery.of(context).size.width > 700 ? 14.0 : 12.0;
+
     return InkWell(
       splashColor: const Color(0xFF204D7E),
       onTap: () {
@@ -522,7 +522,7 @@ defer>
                 title,
                 style: TextStyle(
                     color: fontColor,
-                    fontSize: fontSize,
+                    fontSize: 14,
                     fontWeight:
                         pageIndex == page ? FontWeight.bold : FontWeight.w100),
               ),
@@ -1171,7 +1171,7 @@ defer>
             child: SizedBox(
               width: MediaQuery.of(context).size.width / 2,
               child: const Text(
-                " 아직 아무도 말을 걸어주지 않았습니다 😢 ",
+                " 아직 아무도 말을 걸어주지 않았습니다",
                 style: TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
@@ -1661,7 +1661,7 @@ class ColorCircle extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(
               width: 2,
-              color: color == current ? Colors.white : Colors.transparent)),
+              color: color == current ? Colors.white70 : Colors.transparent)),
     );
   }
 }
